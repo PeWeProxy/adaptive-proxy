@@ -354,10 +354,13 @@ public class AdaptiveEngine  {
 								log.warn("Null HttpRequest was provided by RequestProcessingPlugin '"+requestPlugin+"' after calling getNewRequest()," +
 											" substitution is being ignored.");
 							else {
-								transferOriginalBody = false;
-								conHandle.request = (ModifiableHttpRequestImpl) newRequest;
-								conHandle.messageFactory = new HttpMessageFactoryImpl(this, conHandle.con, conHandle.request);
-								conHandle.request.setAllowedThread();
+								// if FINAL_REQUEST and same request was returned just to stop processing, we DO want to transfer original body
+								if (newRequest != conHandle.request) {
+									transferOriginalBody = false;
+									conHandle.request = (ModifiableHttpRequestImpl) newRequest;
+									conHandle.messageFactory = new HttpMessageFactoryImpl(this, conHandle.con, conHandle.request);
+									conHandle.request.setAllowedThread();
+								}
 								if (action == RequestProcessingActions.NEW_REQUEST) {
 									pluginsChangedResponse.add(requestPlugin);
 									again = true;
@@ -577,15 +580,18 @@ public class AdaptiveEngine  {
 								log.warn("Null HttpResponse was provided by ResponseProcessingPlugin '"+responsePlugin+"' after calling getNewResponse()," +
 											" substitution is being ignored.");
 							else {
-								transferOriginalBody = false;
-								conHandle.response = (ModifiableHttpResponseImpl) newResponse;
-								conHandle.response.setAllowedThread();
+								// if FINAL_RESPONSE and same response was returned just to stop processing, we DO want to transfer original body
+								if (newResponse != conHandle.response) {
+									transferOriginalBody = false;
+									conHandle.response = (ModifiableHttpResponseImpl) newResponse;
+									conHandle.response.setAllowedThread();
+								}
+								if (action == ResponseProcessingActions.NEW_RESPONSE) {
+									pluginsChangedResponse.add(responsePlugin);
+									again = true;
+								}
+								break;
 							}
-							if (action == ResponseProcessingActions.NEW_RESPONSE) {
-								pluginsChangedResponse.add(responsePlugin);
-								again = true;
-							}
-							break;
 						}
 					}
 				} catch (Throwable t) {
