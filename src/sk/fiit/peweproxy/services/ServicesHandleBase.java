@@ -556,6 +556,9 @@ public abstract class ServicesHandleBase<ModuleType extends ServiceModule> imple
 		if (previousService == null)
 			throw new IllegalArgumentException("Previous service can not be null");
 		ServiceBinding<Service> svcContainer = (ServiceBinding<Service>)serviceBindings.get(previousService);
+		if(svcContainer == null) {
+			throw new ServiceUnavailableException(previousService.getClass(), "No more instances available", null);
+		}
 		if (log.isDebugEnabled())
 			log.debug(getLogTextHead()+"Asking for next service "+svcContainer.svcInfo.serviceClass.getName()+"(previous: "+previousService+")");
 		ServiceInfo<Service> svcInfo = new ServiceInfo<Service>(svcContainer.svcInfo.serviceClass, svcContainer.realization.module);
